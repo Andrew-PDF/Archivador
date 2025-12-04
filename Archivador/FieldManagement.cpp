@@ -23,32 +23,23 @@ int ListaCampos::contarCampos() {
 
 void Campo::ingresarCampo(ofstream& salida, const string& nombre) {
 
-	char Op;
-	salida << "--- Campos del archivo " << nombre << " ---" << endl;
-					
-			cout << "Nombre del campo: ";
-			getline(cin, nombreCampo);
-			salida << nombreCampo << endl;
+		cout << "Nombre del Campo: "; getline(cin, nombreCampo);
+		size_t tamano = nombreCampo.size();
+		salida.write((const char*)&tamano, sizeof(tamano));
+		salida.write(nombreCampo.data(), tamano);
+}
+bool ListaCampos::leerCampos(ifstream& entrada) {
+	size_t tamano_leido;
+	string Nombre_leido;
 
-			cout << "Tipo de dato (Int[1]/Float[2]/Char[3]/String[4]): "<<endl;
-			tipoDato = _getche();
-			cout << "\n";
-			salida << "Tipo: ";
-			switch (tipoDato) {
-			case '1':
-				salida << "int" << endl;
-				break;
-			case '2':
-				salida << "float" << endl;
-				break;
-			case '3':
-				salida << "char" << endl;
-				break;
-			case '4':
-				salida << "string" << endl;
-				break;
-			default:
-				cout << "Ingrese un valor correcto por favor" << endl;
-			}
-		agregar_campo << "----------------------------------------------" << endl;
+	entrada.read((char*)&tamano_leido, sizeof(tamano_leido));
+	if (!entrada) return false;
+	cout << "-----CAMPOS DEL ARCHIVO-----" << endl;
+	if (tamano_leido > 0) {
+		Nombre_leido.resize(tamano_leido);
+		entrada.read(&Nombre_leido[0], tamano_leido);
+		if (!entrada) return false;
+	}
+
+	return true;
 }

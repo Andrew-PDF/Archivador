@@ -8,6 +8,7 @@ private:
 	NodoCampo* cabeza;
 public:
 	void agregarCampo(std::ofstream&, const std::string&);
+	bool leerCampos(std::ifstream&);
 	int contarCampos();
 };
 class Campo {

@@ -10,14 +10,14 @@
 using namespace std;
 
 void Cabecera::ingresarCabecera(ofstream& crear, const string& nombre) {
-		cout << "Descripcion breve: "; getline(cin, descripcion);
-
-		crear << "--- Contenido del archivo " << nombre << " ---" << endl;
-		crear << descripcion << endl;
+		
+    cout << "Descripcion breve: "; getline(cin, descripcion);
+        size_t tamano = descripcion.size();
 		time_t now = time(0);
-		fechaCreacion = ctime(&now);
-		crear << fechaCreacion << endl;
-		crear << "----------------------------------------------" << endl;
+
+        crear.write((const char*)&tamano, sizeof(tamano));
+        crear.write(descripcion.data(), tamano);
+        crear.write((const char*)&now, sizeof(time_t));
 
 }
 void ListaArchivos::crearNuevoArchivo() {
@@ -81,7 +81,7 @@ void ArchivoRAM::crearArchivo() {
      ruta = "prueba\\" + nombre + ".txt";
      cout << "Ruta de archivo: " << ruta << std::endl;
 
-     salida.open(ruta);
+     salida.open(ruta, ios::app | ios::binary);
      if (!salida.is_open()) {
          std::cout << "Error al abrir el archivo. Verifique si la carpeta 'prueba' existe." << std::endl;
          return;
@@ -92,7 +92,7 @@ void ArchivoRAM::crearArchivo() {
 
      cout << "\n--- Ingresar CAMPOS ---\n";
      do {
-         salida.open(ruta, std::ios::app);
+         salida.open(ruta, ios::app | ios::binary);
          if (!salida.is_open()) {
              cout << "Error al reabrir el archivo para Campos." << std::endl;
              return;
@@ -111,10 +111,21 @@ void ArchivoRAM::crearArchivo() {
         cabecera.numCampos = listaCampos.contarCampos();
 }
 bool Cabecera::leerCabecera(std::ifstream& entrada) {
-    char cadena[100];
-    while (entrada.getline(cadena, 100)) {
-        cout << cadena << endl;
+    size_t tamano_leida;
+    string descripcion_leida;
+    time_t now;
+
+    entrada.read((char*)&tamano_leida, sizeof(tamano_leida));
+    if (!entrada) return false;
+    cout << "====CONTENIDO DEL ARCHIVO====" << endl;
+    if (tamano_leida > 0) {
+        descripcion_leida.resize(tamano_leida);
+        entrada.read(&descripcion_leida[0], tamano_leida);
+        if (!entrada) return false;
     }
+    
+    entrada.read(reinterpret_cast<char*>(&now), sizeof(time_t));
+    if (!entrada) return false;
 
     return true;
 }
@@ -158,6 +169,11 @@ bool ArchivoRAM::cargarDesdeDisco(const string& nombre) {
     }
 
     if (!cabecera.leerCabecera(entrada)) {
+        std::cout << "Error al leer la Cabecera.\n";
+        entrada.close();
+        return false;
+    }
+    if (!listaCampos.leerCampos(entrada)) {
         std::cout << "Error al leer la Cabecera.\n";
         entrada.close();
         return false;
